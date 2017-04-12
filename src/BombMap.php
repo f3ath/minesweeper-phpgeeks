@@ -18,19 +18,17 @@ class BombMap
         $this->map = $map;
     }
 
-    public function hasBomb(int $row, int $col): bool
+    public function hasBomb(Cell $point): bool
     {
-        return self::BOMB === $this->map[$row][$col];
+        return self::BOMB === $point->inArray($this->map);
     }
 
-    public function countBombsAround(int $row, int $col): int
+    public function countBombsAround(Cell $cell): int
     {
         $count = 0;
-        foreach ($this->getAdjacent($row, $this->getHeight()) as $r) {
-            foreach ($this->getAdjacent($col, $this->getWidth()) as $c) {
-                if ($this->hasBomb($r, $c)) {
-                    $count++;
-                }
+        foreach ($cell->getNeighbors($this->getWidth(), $this->getHeight()) as $neighbor) {
+            if ($this->hasBomb($neighbor)) {
+                $count++;
             }
         }
         return $count;
@@ -48,21 +46,11 @@ class BombMap
 
     public function getBombCells(): \Iterator
     {
-        for ($r = 0; $r < $this->getWidth(); $r++) {
-            for ($c = 0; $c < $this->getHeight(); $c++) {
-                if ($this->hasBomb($r, $c)) {
-                    yield [$r, $c];
-                }
+        foreach (Cell::iterateRectangle($this->getWidth(), $this->getHeight()) as $cell) {
+            if ($this->hasBomb($cell)) {
+                yield $cell;
             }
         }
-    }
-
-    private function getAdjacent(int $n, int $size): array
-    {
-       return range(
-           max(0, $n - 1),
-           min($size - 1, $n + 1)
-       );
     }
 
     private function isValid(array $map): bool

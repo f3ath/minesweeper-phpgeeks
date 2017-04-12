@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace PhpGeeks\Minesweeper\Test;
 
 use PhpGeeks\Minesweeper\Board;
-use PhpGeeks\Minesweeper\Game;
 use PhpGeeks\Minesweeper\BombMap;
+use PhpGeeks\Minesweeper\Game;
 use PHPUnit\Framework\TestCase;
 
 class GameTest extends TestCase
@@ -25,10 +25,10 @@ class GameTest extends TestCase
     {
         return [
             [
-                []
+                [],
             ],
             [
-                ['']
+                [''],
             ],
         ];
     }
@@ -37,12 +37,12 @@ class GameTest extends TestCase
     public function canCreateGame()
     {
         $board = $this->createGame([
-            '*'
+            '*',
         ]);
         $this->assertFalse($board->isLost());
         $this->assertEquals(
             [
-                [Board::UNOPENED_CELL]
+                [Board::UNOPENED_CELL],
             ],
             $board->getView()
         );
@@ -52,13 +52,13 @@ class GameTest extends TestCase
     public function gameIsLostWhenBombIsClicked()
     {
         $game = $this->createGame([
-            '*'
+            '*',
         ]);
         $game->click(0, 0);
         $this->assertTrue($game->isLost());
         $this->assertView(
             [
-                'x'
+                'x',
             ],
             $game
         );
@@ -69,32 +69,84 @@ class GameTest extends TestCase
     {
         $game = $this->createGame([
             ' *',
+            '  ',
         ]);
         $game->click(0, 0);
+        $this->assertFalse($game->isWon());
+        $this->assertView(
+            [
+                '1 ',
+                '  ',
+            ],
+            $game
+        );
+        $game->click(1, 0);
+        $this->assertFalse($game->isWon());
+        $this->assertView(
+            [
+                '1 ',
+                '1 ',
+            ],
+            $game
+        );
+        $game->click(1, 1);
         $this->assertTrue($game->isWon());
         $this->assertView(
             [
                 '1 ',
+                '11',
             ],
             $game
         );
     }
 
+    /**
+     * @test
+     */
+    public function maximumBombNumberIsReachable()
+    {
+        $game = $this->createGame([
+            '***',
+            '* *',
+            '***',
+        ]);
+        $game->click(1, 1);
+        $this->assertTrue($game->isWon());
+        $this->assertView(
+            [
+                '   ',
+                ' 8 ',
+                '   ',
+            ],
+            $game
+        );
+
+    }
+
     private function createGame(array $map): Game
     {
-        $map = array_map(
-            function (string $s) { return $s ? str_split($s) : []; },
-            $map
+        return new Game(
+            new BombMap(
+                $this->stringsToArray($map)
+            )
         );
-        return new Game(new BombMap($map));
     }
 
     private function assertView(array $view, Game $game): void
     {
-        $view = array_map(
-            function (string $s) { return $s ? str_split($s) : []; },
-            $view
+        $this->assertEquals(
+            $this->stringsToArray($view),
+            $game->getView()
         );
-        $this->assertEquals($view, $game->getView());
+    }
+
+    private function stringsToArray(array $strings): array
+    {
+        return array_map(
+            function (string $s) {
+                return $s ? str_split($s) : [];
+            },
+            $strings
+        );
     }
 }

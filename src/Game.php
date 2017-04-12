@@ -28,14 +28,13 @@ class Game
 
     public function click(int $row, int $col): void
     {
-        if ($this->map->hasBomb($row, $col)) {
-            $this->is_lost = true;
-            $this->updateView();
+        $cell = new Cell($row, $col);
+        if ($this->map->hasBomb($cell)) {
+            $this->markGameLost();
         } else {
             $this->board->drawNumber(
-                $this->map->countBombsAround($row, $col),
-                $row,
-                $col
+                $this->map->countBombsAround($cell),
+                $cell
             );
         }
     }
@@ -47,6 +46,14 @@ class Game
 
     public function isWon(): bool
     {
+        foreach ($this->board->getCells() as $cell) {
+            if (
+                !$this->board->isOpen($cell)
+                && !$this->map->hasBomb($cell)
+            ) {
+                return false;
+            }
+        };
         return true;
     }
 
@@ -55,10 +62,11 @@ class Game
         return $this->board->getView();
     }
 
-    private function updateView(): void
+    private function markGameLost(): void
     {
+        $this->is_lost = true;
         foreach ($this->map->getBombCells() as $cell) {
-            $this->board->drawBomb(...$cell);
+            $this->board->drawBomb($cell);
         }
     }
 }
